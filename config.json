@@ -1,0 +1,6 @@
+{
+    "name": "GaboSecurityPanel",
+    "token": "XXXXXXXXXXXXXXXXXXXXXXXXXXx",
+    "allowed_ids": [#inserisca qui gli id, come interi],  
+    "super_user": [#inserisca qui gli id, come interi]
+}
