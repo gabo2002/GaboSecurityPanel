@@ -1,16 +1,17 @@
 import psutil
 from datetime import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler,ConversationHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler,ConversationHandler,MessageHandler,Filters
+
 from threadStart import checker
 import os
 from utenti import getUtentiConnessi
 from security import security
 from grafici import Grafico
 from utilities import scriviFileLog
+from comando import *
 from datetime import timedelta
-import sensori_database
-import urllib3
+import sensori_database 
 
 check = None
 graficoOggetto = Grafico("botTelegram.db")
@@ -81,6 +82,9 @@ def notifica(update,context):
         :return: None
         :rtype: None
     '''
+    if not security.utenteAutorizzato(update):
+        context.bot.send_message("Attenzione! Non hai i permessi per utilizzare il comando /notifica")
+        return
     testo = "Utilizzo: /notifica <testo>"
     try:
         testo = update.message.text.split("/notifica")[1]   #ottengo il testo
@@ -103,6 +107,8 @@ def errore_inaspettato(update,context):
     print("Errore inaspettato: {}".format(context.error))
 
 def grafico(update,context):
+    if not security.utenteAutorizzato(update):
+        return
     keyboard = [
         [InlineKeyboardButton("Network", callback_data='NETWORK'),InlineKeyboardButton("RAM", callback_data='RAM')],
         [InlineKeyboardButton("CPU", callback_data='CPU'),InlineKeyboardButton("SWAP",callback_data="SWAP")],
@@ -206,6 +212,37 @@ def network(update,context):
     return 3
 
 
+def schedule(update,context):
+
+    if not security.utenteAutorizzato(update):
+        context.bot.send_message(update.message.chat_id,"Non sei autorizzato a utilizzare questo comando!")
+        return
+    
+    testo = update.message.text
+    testo = testo.replace("/schedule ","")
+    split = testo.split(" ",1)
+
+    data = split[0]
+    comando_str = split[1]
+    
+    timeNow = datetime.now()
+
+    orario = datetime.strptime(data,"%Y/%m/%d-%H:%M:%S")
+
+    secondi = (orario - timeNow).total_seconds()
+
+    if secondi >= 0:
+        threading.Timer(secondi, comandoAsincrono,args=(update,context,comando_str)).start()
+        context.bot.send_message(update.message.chat_id,"Il tuo comando verra' eseguito all' ora specificata")
+    else:
+        context.bot.send_message(update.message.chat_id,"Errore! Hai inserito una data gia' passata")
+
+def help(update,context):
+
+    stringa = open("help.txt").read()
+    
+    update.message.reply_text(stringa)
+
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler('grafico', grafico)],
     states={
@@ -226,6 +263,18 @@ conv_handler = ConversationHandler(
     fallbacks=[CommandHandler('grafico', grafico)],
 )
 
+conv_handler_comando = ConversationHandler(
+
+    entry_points=[CommandHandler("command",comando)],
+
+    states={
+        1: [
+            MessageHandler(Filters.all,scriviSuProx)
+        ],
+    },
+    fallbacks=[CommandHandler("help",None)],
+)
+
 gestore  = sensori_database.SensoriDatabase("botTelegram.db")
 gestore.start()
 updater = Updater(security.TOKEN,use_context=True)
@@ -233,7 +282,10 @@ disp = updater.dispatcher
 disp.add_handler(CommandHandler("utenti",getUtentiConnessi))
 disp.add_handler(CommandHandler("start",start))
 disp.add_handler(CommandHandler("kill",kill))
+disp.add_handler(CommandHandler("schedule",schedule))
 disp.add_handler(CommandHandler("notifica",notifica))
+disp.add_handler(CommandHandler("help",help))
+disp.add_handler(conv_handler_comando)
 disp.add_error_handler(errore_inaspettato)
 
 

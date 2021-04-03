@@ -1,0 +1,23 @@
+Benvenuto, sono GaboSecurityPanel, il bot per veri sistemisti.
+
+Sono in grado di gestire e amministrare un server linux, attraverso i seguenti comandi:
+
+/help - mostra comandi
+/start - avvia il bot, da questo momento ogni nuovo accesso al server verra' notificato (Admin only)
+/utenti - mostra tutti gli utenti connessi al server	(Admin only)
+/kill - dato un PID, uccide il processo associato (SuperAdmin only)
+/schedule - esegue un comando (non interattivo) all'orario desiderato (formato %Y/%m/%d-%HH:%MM:%SS UTC) (Admin only)
+/notifica - invia una notifica a tutti gli altri admin (Admin only)
+/grafico - suite di comandi interattiva per mostrare TUTTE le informazioni sull'utilizzo del server (Admin only)
+/command - esegue, in maniera interattiva un comando  (Admin only)
+
+UTILIZZO COMANDI:
+
+/start -> /start 
+/help -> /help
+/utenti -> /utenti
+/kill -> /kill <pid>
+/schedule -> /schedule <data (%Y/%m/%d-%HH:%MM:%SS UTC)> <comando>
+/notifica -> /notifica <testo>
+/grafico -> /grafico (per le scelte utilizzare i bottoni)
+/command -> /command <comandi>
